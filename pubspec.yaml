@@ -1,0 +1,55 @@
+name: brillio
+description: "An app to engage parents and children in fun activities."
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.10.1
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.9
+  firebase_auth: ^5.4.1
+  cloud_firestore: ^5.6.2
+  google_sign_in: ^6.2.2
+  font_awesome_flutter: ^10.8.0
+  cached_network_image: ^3.3.1
+  flutter_animate: ^4.5.0
+  card_swiper: ^3.0.1
+  flutter_dotenv: ^5.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: "^0.14.3"
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/logos/
+    - assets/vector_images/
+    - assets/icons/
+    - assets/activity_images/
+
+  fonts:
+    - family: Quicksand
+      fonts:
+        - asset: assets/fonts/Quicksand-Regular.ttf
+        - asset: assets/fonts/Quicksand-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Quicksand-SemiBold.ttf
+          weight: 600
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logos/app_icon.png"
+  android_icon_size: 1024
+  ios_icon_size: 1024
+  remove_alpha: true
