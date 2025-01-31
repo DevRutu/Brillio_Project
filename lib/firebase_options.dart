@@ -40,19 +40,19 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get android => FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '',
-        appId: dotenv.env['FIREBASE_APP_ID'] ?? '',
-        messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-        projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-        storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
+        apiKey: dotenv.env['ANDROID_FIREBASE_API_KEY'] ?? '',
+        appId: dotenv.env['ANDROID_FIREBASE_APP_ID'] ?? '',
+        messagingSenderId: dotenv.env['ANDROID_FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+        projectId: dotenv.env['ANDROID_FIREBASE_PROJECT_ID'] ?? '',
+        storageBucket: dotenv.env['ANDROID_FIREBASE_STORAGE_BUCKET'] ?? '',
       );
 
   static FirebaseOptions get ios => FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '',
-        appId: dotenv.env['FIREBASE_APP_ID'] ?? '',
-        messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-        projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-        storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
+        apiKey: dotenv.env['IOS_FIREBASE_API_KEY'] ?? '',
+        appId: dotenv.env['IOS_FIREBASE_APP_ID'] ?? '',
+        messagingSenderId: dotenv.env['IOS_FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+        projectId: dotenv.env['IOS_FIREBASE_PROJECT_ID'] ?? '',
+        storageBucket: dotenv.env['IOS_FIREBASE_STORAGE_BUCKET'] ?? '',
         iosBundleId: 'com.example.brillio',
       );
 }

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 
 import 'firebase_options.dart';
 import 'screens/loading_screen.dart';
@@ -12,29 +13,72 @@ import 'screens/home_screen.dart';
 import 'screens/auth_wrapper.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
+  // Configure logging
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
+  final log = Logger('MainApp');
 
-  FirebaseOptions? firebaseOptions;
-  if (kIsWeb) {
-    // Web configuration (if needed)
-    // firebaseOptions = DefaultFirebaseOptions.web;
-  } else if (defaultTargetPlatform == TargetPlatform.android) {
-    firebaseOptions = DefaultFirebaseOptions.android;
-  } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-    firebaseOptions = DefaultFirebaseOptions.ios;
-  }
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    // Load environment variables
+    await dotenv.load(fileName: ".env");
+    log.info("Environment variables loaded successfully");
 
-  if (firebaseOptions != null) {
+    // Check if all required variables are present
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
+
+    final apiKey = dotenv.env[isAndroid ? 'ANDROID_FIREBASE_API_KEY' : 'IOS_FIREBASE_API_KEY'];
+    final appId = dotenv.env[isAndroid ? 'ANDROID_FIREBASE_APP_ID' : 'IOS_FIREBASE_APP_ID'];
+    final messagingSenderId = dotenv.env[isAndroid ? 'ANDROID_FIREBASE_MESSAGING_SENDER_ID' : 'IOS_FIREBASE_MESSAGING_SENDER_ID'];
+    final projectId = dotenv.env[isAndroid ? 'ANDROID_FIREBASE_PROJECT_ID' : 'IOS_FIREBASE_PROJECT_ID'];
+    final storageBucket = dotenv.env[isAndroid ? 'ANDROID_FIREBASE_STORAGE_BUCKET' : 'IOS_FIREBASE_STORAGE_BUCKET'];
+
+    if (apiKey == null || appId == null || messagingSenderId == null || 
+        projectId == null || storageBucket == null) {
+      throw Exception('Missing Firebase configuration in .env file');
+    }
+
+    FirebaseOptions firebaseOptions = isAndroid
+        ? DefaultFirebaseOptions.android
+        : DefaultFirebaseOptions.ios;
+
+    log.info("Attempting Firebase initialization");
     await Firebase.initializeApp(options: firebaseOptions);
-  } else {
-    print('Firebase initialization failed: Unsupported platform.');
-    return;
-  }
+    log.info("Firebase initialization successful");
 
-  runApp(const BrillioApp());
+    runApp(const BrillioApp());
+  } catch (e, stackTrace) {
+    print('Initialization error: $e');
+    print('Stack trace: $stackTrace');
+    
+    // Fallback app in case of initialization failure
+    runApp(ErrorApp(error: e.toString()));
+  }
+}
+
+class ErrorApp extends StatelessWidget {
+  final String error;
+
+  const ErrorApp({Key? key, required this.error}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text(
+            'App Initialization Failed:\n$error', 
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class BrillioApp extends StatelessWidget {
