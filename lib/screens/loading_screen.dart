@@ -6,14 +6,14 @@ class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
 
   @override
-  _LoadingScreenState createState() => _LoadingScreenState();
+  State<LoadingScreen> createState() => _LoadingScreenState();
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const AuthWrapper())
       );
@@ -23,49 +23,71 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F7FF),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Brillio',
-              style: GoogleFonts.quicksand(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                foreground: Paint()
-                  ..shader = const LinearGradient(
-                    colors: [Color(0xFF45C4E6), Color(0xFFE668D9)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF45C4E6), Color(0xFFE668D9)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Ready to Play & Grow Together?',
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFEBC2FF),
+              Color(0xFFA873E8).withOpacity(0.7),
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Brillio',
                 style: GoogleFonts.quicksand(
-                  fontSize: 18,
+                  fontSize: 52,
+                  fontWeight: FontWeight.bold,
                   color: Colors.white,
-                  fontWeight: FontWeight.w600
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.1),
+                      offset: Offset(2, 2),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 40),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF45C4E6)),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Making Playtime Special',
+                  style: GoogleFonts.quicksand(
+                    fontSize: 22,
+                    color: Color(0xFFA873E8),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
