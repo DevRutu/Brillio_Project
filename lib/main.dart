@@ -13,7 +13,6 @@ import 'screens/home_screen.dart';
 import 'screens/auth_wrapper.dart';
 
 void main() async {
-  // Configure logging
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) {
     print('${record.level.name}: ${record.time}: ${record.message}');
@@ -22,12 +21,9 @@ void main() async {
 
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    
-    // Load environment variables
     await dotenv.load(fileName: ".env");
     log.info("Environment variables loaded successfully");
 
-    // Check if all required variables are present
     final isAndroid = defaultTargetPlatform == TargetPlatform.android;
     final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
 
@@ -54,8 +50,6 @@ void main() async {
   } catch (e, stackTrace) {
     print('Initialization error: $e');
     print('Stack trace: $stackTrace');
-    
-    // Fallback app in case of initialization failure
     runApp(ErrorApp(error: e.toString()));
   }
 }
@@ -71,9 +65,9 @@ class ErrorApp extends StatelessWidget {
       home: Scaffold(
         body: Center(
           child: Text(
-            'App Initialization Failed:\n$error', 
+            'App Initialization Failed:\n$error',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.red),
+            style: TextStyle(color: Color(0xFFA873E8)),
           ),
         ),
       ),
@@ -90,31 +84,33 @@ class BrillioApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Brillio',
       theme: ThemeData(
-        primarySwatch: const MaterialColor(0xFF45C4E6, {
-          50: Color(0xFFE1F6FB),
-          100: Color(0xFFB5E8F5),
-          200: Color(0xFF89D9EF),
-          300: Color(0xFF5DCAE8),
-          400: Color(0xFF45C4E6),
-          500: Color(0xFF2DBDE3),
-          600: Color(0xFF28B7E0),
-          700: Color(0xFF22AEDC),
-          800: Color(0xFF1CA6D8),
-          900: Color(0xFF1197D0),
-        }),
-        textTheme: GoogleFonts.quicksandTextTheme(),
-        scaffoldBackgroundColor: const Color(0xFFF0F7FF),
+        primaryColor: const Color(0xFFA873E8),
+        scaffoldBackgroundColor: Colors.white,
+        textTheme: GoogleFonts.quicksandTextTheme().copyWith(
+          displayLarge: TextStyle(
+            color: const Color(0xFFA873E8),
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+          bodyLarge: TextStyle(
+            color: const Color(0xFF56D1DC),
+            fontSize: 16,
+          ),
+        ),
         cardTheme: CardTheme(
+          color: Colors.white,
+          elevation: 2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF45C4E6),
+            backgroundColor: const Color(0xFFA873E8),
             foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),

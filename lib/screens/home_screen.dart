@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F7FF),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -86,17 +86,23 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.quicksand(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF45C4E6),
+              color: const Color(0xFFA873E8),
             ),
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.search,
-              color: Color(0xFF45C4E6),
-              size: 32,
+          Container(
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 255, 255, 255),
+              borderRadius: BorderRadius.circular(15),
             ),
-            padding: const EdgeInsets.all(8),
-            onPressed: () {},
+            child: IconButton(
+              icon: const Icon(
+                Icons.search,
+                color: Color(0xFF5D7BD5),
+                size: 28,
+              ),
+              padding: const EdgeInsets.all(8),
+              onPressed: () {},
+            ),
           ),
         ],
       ),
@@ -114,64 +120,62 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.quicksand(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: const Color(0xFF5D7BD5),
             ),
           ),
-          const SizedBox(height: 10),
-          InkWell(
-            onTap: () {
-              // Handle tap
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF45C4E6), Color(0xFFE668D9)],
+          const SizedBox(height: 15),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFA873E8),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFA873E8).withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF45C4E6).withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Nature Scavenger Hunt',
-                          style: GoogleFonts.quicksand(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nature Scavenger Hunt',
+                        style: GoogleFonts.quicksand(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          'Explore nature and find hidden treasures in your backyard',
-                          style: GoogleFonts.quicksand(
-                            fontSize: 14,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Explore nature and find hidden treasures in your backyard',
+                        style: GoogleFonts.quicksand(
+                          fontSize: 15,
+                          color: Colors.white.withOpacity(0.9),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const Icon(
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
                     Icons.arrow_forward_ios,
                     color: Colors.white,
                     size: 20,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -188,14 +192,14 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Text(
             'Categories',
             style: GoogleFonts.quicksand(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: const Color(0xFF5D7BD5),
             ),
           ),
         ),
         SizedBox(
-          height: 180,
+          height: 200,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -215,10 +219,10 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(20),
             image: DecorationImage(
               image: AssetImage(category['image']!),
               fit: BoxFit.cover,
@@ -237,16 +241,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   category['title']!,
                   style: GoogleFonts.quicksand(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 8),
                 Text(
                   category['description']!,
                   style: GoogleFonts.quicksand(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
@@ -294,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.quicksand(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: const Color(0xFF5D7BD5),
             ),
           ),
         ),
@@ -305,55 +309,46 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: activities.length,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemBuilder: (context, index) {
-            return InkWell(
-              onTap: () {
-                // Handle tap
-              },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 15),
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF45C4E6).withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+            return Container(
+              margin: const EdgeInsets.only(bottom: 15),
+              decoration: BoxDecoration(
+                color: const Color(0xFFC2FFEE),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            activities[index]['title']!,
-                            style: GoogleFonts.quicksand(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            activities[index]['description']!,
-                            style: GoogleFonts.quicksand(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
+                title: Text(
+                  activities[index]['title']!,
+                  style: GoogleFonts.quicksand(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF5D7BD5),
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    activities[index]['description']!,
+                    style: GoogleFonts.quicksand(
+                      fontSize: 14,
+                      color: Colors.black87,
                     ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: const Color(0xFF45C4E6),
-                      size: 20,
-                    ),
-                  ],
+                  ),
+                ),
+                trailing: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: const Color(0xFF5D7BD5),
+                    size: 20,
+                  ),
                 ),
               ),
             );
@@ -363,15 +358,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-Widget _buildBottomNavBar() {
+  Widget _buildBottomNavBar() {
     return Container(
-      height: 75,
+      height: 80,
       decoration: BoxDecoration(
         color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF45C4E6).withOpacity(0.1),
-            blurRadius: 10,
+            color: const Color.fromARGB(255, 210, 210, 210).withOpacity(0.2),
+            blurRadius: 15,
             offset: const Offset(0, -5),
           ),
         ],
@@ -395,45 +394,41 @@ Widget _buildBottomNavBar() {
       onTap: () => setState(() => _selectedIndex = index),
       child: Container(
         width: 80,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF45C4E6), Color(0xFFE668D9)],
-                )
-              : null,
-          color: isSelected ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? const Color(0xFFA873E8) : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+          // Border property removed
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : Colors.grey[600],
-              size: 32,
+              color: isSelected ? Colors.white : const Color(0xFF5D7BD5),
+              size: 28,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: GoogleFonts.quicksand(
-                color: isSelected ? Colors.white : Colors.grey[600],
+                color: isSelected ? Colors.white : const Color(0xFF5D7BD5),
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],
         ),
-      ).animate(
-        target: isSelected ? 1 : 0,
-      ).scale(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        begin: const Offset(1, 1),
-        end: const Offset(1.05, 1.05),
-      ),
+      )
+          .animate(
+            target: isSelected ? 1 : 0,
+          )
+          .scale(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            begin: const Offset(1, 1),
+            end: const Offset(1.05, 1.05),
+          ),
     );
   }
 }
