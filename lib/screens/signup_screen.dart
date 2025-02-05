@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../screens/signin_screen.dart';
-import '../screens/home_screen.dart';
+import '../screens/edit_profile_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -14,43 +15,40 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-
   bool _isLoading = false;
 
   void _signUp() async {
     if (_formKey.currentState!.validate()) {
       if (_passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Passwords do not match'),
-            backgroundColor: Color(0xFFA873E8),
-          ),
+          SnackBar(content: Text('Passwords do not match')),
         );
         return;
       }
 
       setState(() => _isLoading = true);
-
       final user = await _authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
       setState(() => _isLoading = false);
 
       if (user != null && mounted) {
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+          context,
+          MaterialPageRoute(
+            builder: (_) => EditProfileScreen(
+              isInitialSetup: true,
+              userData: null,
+            ),
+          ),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sign Up Failed. Please try again.'),
-            backgroundColor: Color(0xFFA873E8),
-          ),
+          SnackBar(content: Text('Sign Up Failed. Please try again.')),
         );
       }
     }
@@ -58,24 +56,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _signUpWithGoogle() async {
     setState(() => _isLoading = true);
-
     final user = await _authService.signInWithGoogle();
-
     setState(() => _isLoading = false);
 
     if (user != null && mounted) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        context,
+        MaterialPageRoute(
+          builder: (_) => EditProfileScreen(
+            isInitialSetup: true,
+            userData: userDoc.data(),
+          ),
+        ),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Google Sign Up Failed. Please try again.'),
-          backgroundColor: Color(0xFFA873E8),
-        ),
+        SnackBar(content: Text('Google Sign Up Failed. Please try again.')),
       );
     }
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
