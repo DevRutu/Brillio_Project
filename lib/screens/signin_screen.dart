@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../screens/signup_screen.dart';
 import '../screens/home_screen.dart';
+import '../screens/edit_profile_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -18,6 +20,32 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  Future<void> _checkProfileAndNavigate(String userId) async {
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    if (mounted) {
+      if (!userDoc.exists || !(userDoc.data()?['profileCompleted'] ?? false)) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EditProfileScreen(
+              isInitialSetup: true,
+              userData: userDoc.data(),
+            ),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      }
+    }
+  }
+
   void _signIn() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
@@ -26,12 +54,15 @@ class _SignInScreenState extends State<SignInScreen> {
         password: _passwordController.text.trim(),
       );
       setState(() => _isLoading = false);
+
       if (user != null && mounted) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        await _checkProfileAndNavigate(user.uid);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Sign In Failed. Please check your credentials.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sign In Failed. Please check your credentials.'),
+          ),
+        );
       }
     }
   }
@@ -40,12 +71,15 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() => _isLoading = true);
     final user = await _authService.signInWithGoogle();
     setState(() => _isLoading = false);
+
     if (user != null && mounted) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      await _checkProfileAndNavigate(user.uid);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Google Sign In Failed. Please try again.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Google Sign In Failed. Please try again.'),
+        ),
+      );
     }
   }
 
