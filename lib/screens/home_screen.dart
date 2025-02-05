@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../screens/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -190,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
-            'Categories',
+            'Creative Corner',
             style: GoogleFonts.quicksand(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -277,14 +278,6 @@ class _HomeScreenState extends State<HomeScreen> {
       {
         'title': 'Math Magic Games',
         'description': 'Fun ways to practice basic mathematics'
-      },
-      {
-        'title': 'Art and Craft Session',
-        'description': 'Create beautiful artwork using household items'
-      },
-      {
-        'title': 'Music and Movement',
-        'description': 'Dance and rhythm activities for kids'
       },
     ];
 
@@ -391,14 +384,28 @@ class _HomeScreenState extends State<HomeScreen> {
     final isSelected = _selectedIndex == index;
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
+      onTap: () {
+        setState(() => _selectedIndex = index);
+        
+        if (index == 3) { // Profile tab
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProfileScreen(
+                onReturn: () {
+                  setState(() => _selectedIndex = 0); // Reset to home when returning
+                },
+              ),
+            ),
+          );
+        }
+      },
       child: Container(
         width: 80,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFA873E8) : Colors.transparent,
           borderRadius: BorderRadius.circular(15),
-          // Border property removed
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -419,16 +426,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      )
-          .animate(
-            target: isSelected ? 1 : 0,
-          )
-          .scale(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            begin: const Offset(1, 1),
-            end: const Offset(1.05, 1.05),
-          ),
+      ).animate(
+        target: isSelected ? 1 : 0,
+      ).scale(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        begin: const Offset(1, 1),
+        end: const Offset(1.05, 1.05),
+      ),
     );
   }
 }

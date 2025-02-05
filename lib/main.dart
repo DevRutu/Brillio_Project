@@ -11,6 +11,8 @@ import 'screens/loading_screen.dart';
 import 'screens/signin_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/auth_wrapper.dart';
+import 'screens/profile_screen.dart';
+import 'screens/edit_profile_screen.dart';
 
 void main() async {
   Logger.root.level = Level.ALL;
