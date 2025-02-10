@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../screens/profile_screen.dart';
+import '../screens/explore_screen.dart';
+import '../screens/scheduler_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -386,18 +388,44 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: () {
         setState(() => _selectedIndex = index);
-        
-        if (index == 3) { // Profile tab
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ProfileScreen(
-                onReturn: () {
-                  setState(() => _selectedIndex = 0); // Reset to home when returning
-                },
+
+        // Handle navigation based on index
+        switch (index) {
+          case 1: // Explore tab
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ExploreScreen(),
               ),
-            ),
-          );
+            ).then((_) {
+              setState(
+                  () => _selectedIndex = 0); // Reset to home when returning
+            });
+            break;
+          case 2: // Schedule tab
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const SchedulerScreen(),
+              ),
+            ).then((_) {
+              setState(
+                  () => _selectedIndex = 0); // Reset to home when returning
+            });
+            break;
+          case 3: // Profile tab
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProfileScreen(
+                  onReturn: () {
+                    setState(() =>
+                        _selectedIndex = 0); // Reset to home when returning
+                  },
+                ),
+              ),
+            );
+            break;
         }
       },
       child: Container(
@@ -426,14 +454,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ).animate(
-        target: isSelected ? 1 : 0,
-      ).scale(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        begin: const Offset(1, 1),
-        end: const Offset(1.05, 1.05),
-      ),
+      )
+          .animate(
+            target: isSelected ? 1 : 0,
+          )
+          .scale(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            begin: const Offset(1, 1),
+            end: const Offset(1.05, 1.05),
+          ),
     );
   }
 }
