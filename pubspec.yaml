@@ -21,6 +21,10 @@ dependencies:
   card_swiper: ^3.0.1
   flutter_dotenv: ^5.1.0
   logging: ^1.2.0
+  dropdown_search: ^5.0.6  # Added for city search dropdown
+  flutter_map: ^6.1.0     # Added for map display
+  latlong2: ^0.9.0        # Added for map coordinates
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
