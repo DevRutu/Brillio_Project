@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'edit_profile_screen.dart';
 import '../screens/signin_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/explore_screen.dart';
 import '../screens/scheduler_screen.dart';
+import '../screens/helpnsupport_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onReturn;
-  final String previousScreen; // Add this to track where we came from
+  final String previousScreen;
   
   const ProfileScreen({
     super.key,
     required this.onReturn,
-    required this.previousScreen, // Add this parameter
+    required this.previousScreen,
   });
 
   @override
@@ -74,7 +74,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _handleBackNavigation() {
     widget.onReturn();
     
-    // Navigate based on the previous screen
     Widget targetScreen;
     switch (widget.previousScreen) {
       case 'home':
@@ -258,17 +257,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
         _buildMenuItem(
-          icon: Icons.email,
-          title: 'Change Email',
-          onTap: () {
-            // TODO: Implement email change
-          },
-        ),
-        _buildMenuItem(
           icon: Icons.help,
           title: 'Help & Support',
           onTap: () {
-            // TODO: Implement help & support
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HelpAndSupportScreen()),
+            );
           },
         ),
         _buildMenuItem(
