@@ -7,7 +7,7 @@ import '../screens/explore_screen.dart';
 import '../screens/scheduler_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -90,21 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFA873E8),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 255, 255, 255),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.search,
-                color: Color(0xFF5D7BD5),
-                size: 28,
-              ),
-              padding: const EdgeInsets.all(8),
-              onPressed: () {},
             ),
           ),
         ],
@@ -419,9 +404,9 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(
                 builder: (_) => ProfileScreen(
                   onReturn: () {
-                    setState(() =>
-                        _selectedIndex = 0); // Reset to home when returning
+                    setState(() => _selectedIndex = 0); // Reset to home when returning
                   },
+                  previousScreen: 'home',
                 ),
               ),
             );
