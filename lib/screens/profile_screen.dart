@@ -1,19 +1,23 @@
-// profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'edit_profile_screen.dart';
 import '../screens/signin_screen.dart';
+import '../screens/home_screen.dart';
+import '../screens/explore_screen.dart';
+import '../screens/scheduler_screen.dart';
+import '../screens/helpnsupport_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onReturn;
+  final String previousScreen;
   
   const ProfileScreen({
-    Key? key,
+    super.key,
     required this.onReturn,
-  }) : super(key: key);
+    required this.previousScreen,
+  });
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -22,43 +26,14 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  Map<String, dynamic>? userData;
-  bool isLoading = true;
+  late Stream<DocumentSnapshot> _userStream;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadUserData();
-    });
-  }
-
-  Future<void> _loadUserData() async {
-    if (!mounted) return;
-    
-    try {
-      final user = _auth.currentUser;
-      if (user != null) {
-        final doc = await _firestore.collection('users').doc(user.uid).get();
-        if (mounted) {
-          setState(() {
-            userData = doc.data();
-            isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error loading profile data'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    final user = _auth.currentUser;
+    if (user != null) {
+      _userStream = _firestore.collection('users').doc(user.uid).snapshots();
     }
   }
 
@@ -96,33 +71,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _handleBackNavigation() {
+    widget.onReturn();
+    
+    Widget targetScreen;
+    switch (widget.previousScreen) {
+      case 'home':
+        targetScreen = const HomeScreen();
+        break;
+      case 'explore':
+        targetScreen = const ExploreScreen();
+        break;
+      case 'scheduler':
+        targetScreen = const SchedulerScreen();
+        break;
+      default:
+        targetScreen = const HomeScreen();
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => targetScreen),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFA873E8)),
-                ),
-              )
-            : SingleChildScrollView(
+    return WillPopScope(
+      onWillPop: () async {
+        _handleBackNavigation();
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: StreamBuilder<DocumentSnapshot>(
+            stream: _userStream,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox.shrink();
+              }
+
+              final userData = snapshot.data?.data() as Map<String, dynamic>? ?? {};
+              
+              return SingleChildScrollView(
                 child: Column(
                   children: [
                     _buildHeader(),
-                    _buildProfileSection(),
-                    _buildScoreBadge(),
+                    _buildProfileSection(userData),
+                    _buildScoreBadge(userData),
                     const Divider(
                       color: Color(0xFFEEEEEE),
                       thickness: 1,
                       indent: 20,
                       endIndent: 20,
                     ),
-                    _buildMenuItems(),
+                    _buildMenuItems(userData),
                   ],
                 ),
-              ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -135,10 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Color(0xFF5D7BD5)),
-            onPressed: () {
-              widget.onReturn();
-              Navigator.pop(context);
-            },
+            onPressed: _handleBackNavigation,
           ),
           Text(
             'Profile',
@@ -154,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection(Map<String, dynamic> userData) {
     return Column(
       children: [
         const CircleAvatar(
@@ -164,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          userData?['name'] ?? 'User Name',
+          userData['name'] ?? 'User Name',
           style: GoogleFonts.quicksand(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -175,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildScoreBadge() {
+  Widget _buildScoreBadge(Map<String, dynamic> userData) {
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(20),
@@ -189,11 +196,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Column(
             children: [
               Text(
-                _getBadgeIcon(userData?['badge'] ?? 'bronze'),
+                _getBadgeIcon(userData['badge'] ?? 'bronze'),
                 style: const TextStyle(fontSize: 32),
               ),
               Text(
-                userData?['badge']?.toUpperCase() ?? 'BRONZE',
+                userData['badge']?.toUpperCase() ?? 'BRONZE',
                 style: GoogleFonts.quicksand(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -210,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Column(
             children: [
               Text(
-                '${userData?['score'] ?? 0}',
+                '${userData['score'] ?? 0}',
                 style: GoogleFonts.quicksand(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -231,7 +238,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildMenuItems() {
+  Widget _buildMenuItems(Map<String, dynamic> userData) {
     return Column(
       children: [
         _buildMenuItem(
@@ -246,21 +253,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   userData: userData,
                 ),
               ),
-            ).then((_) => _loadUserData());
-          },
-        ),
-        _buildMenuItem(
-          icon: Icons.email,
-          title: 'Change Email',
-          onTap: () {
-            // TODO: Implement email change
+            );
           },
         ),
         _buildMenuItem(
           icon: Icons.help,
           title: 'Help & Support',
           onTap: () {
-            // TODO: Implement help & support
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HelpAndSupportScreen()),
+            );
           },
         ),
         _buildMenuItem(
