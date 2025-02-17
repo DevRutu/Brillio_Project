@@ -25,6 +25,8 @@ dependencies:
   flutter_map: ^6.1.0     # Added for map display
   latlong2: ^0.9.0        # Added for map coordinates
   intl: ^0.18.1
+  url_launcher: ^6.2.5
+  flutter_native_splash: ^2.4.4
 
 dev_dependencies:
   flutter_test:
@@ -59,3 +61,7 @@ flutter_launcher_icons:
   android_icon_size: 1024
   ios_icon_size: 1024
   remove_alpha: true
+
+flutter_native_splash:
+  color: "#FFFFFF" # Background color of your splash screen (e.g., white)
+  image: assets/logos/app_icon.png # Path to your logo image

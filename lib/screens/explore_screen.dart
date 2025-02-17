@@ -6,9 +6,11 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import './profile_screen.dart';
 import './home_screen.dart';
+import '../screens/scheduler_screen.dart';
+
 
 class ExploreScreen extends StatefulWidget {
-  const ExploreScreen({Key? key}) : super(key: key);
+  const ExploreScreen({super.key});
 
   @override
   _ExploreScreenState createState() => _ExploreScreenState();
@@ -334,21 +336,31 @@ class _ExploreScreenState extends State<ExploreScreen> {
         
         switch (index) {
           case 0: // Home tab
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => const HomeScreen(),
               ),
             );
             break;
+          case 2: // Schedule tab
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const SchedulerScreen(),
+              ),
+            ).then((_) {
+              setState(
+                  () => _selectedIndex = 0); // Reset to home when returning
+            });
+            break;
           case 3: // Profile tab
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => ProfileScreen(
-                  onReturn: () {
-                    setState(() => _selectedIndex = 1); // Reset to explore when returning
-                  },
+                  onReturn: () {},
+                  previousScreen: 'explore', // Reset to explore when returnin
                 ),
               ),
             );

@@ -9,7 +9,7 @@ import 'explore_screen.dart';
 class SchedulerScreen extends StatefulWidget {
   final Function()? onReturn;
   
-  const SchedulerScreen({Key? key, this.onReturn}) : super(key: key);
+  const SchedulerScreen({super.key, this.onReturn});
 
   @override
   _SchedulerScreenState createState() => _SchedulerScreenState();
@@ -169,7 +169,7 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          ...tasks.map((task) => _buildTaskItem(task)).toList(),
+          ...tasks.map((task) => _buildTaskItem(task)),
         ],
       ),
     );
@@ -254,25 +254,24 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
         // Handle navigation based on index
         switch (index) {
           case 0: // Home tab
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const HomeScreen()),
             );
             break;
           case 1: // Explore tab
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ExploreScreen()),
             );
             break;
           case 3: // Profile tab
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => ProfileScreen(
-                  onReturn: () {
-                    setState(() => _selectedIndex = 2); // Reset to schedule when returning
-                  },
+                  onReturn: () {},
+                  previousScreen: 'scheduler',
                 ),
               ),
             );
