@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
@@ -8,11 +7,6 @@ import 'package:logging/logging.dart';
 
 import 'firebase_options.dart';
 import 'screens/loading_screen.dart';
-import 'screens/signin_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/auth_wrapper.dart';
-import 'screens/profile_screen.dart';
-import 'screens/edit_profile_screen.dart';
 
 void main() async {
   Logger.root.level = Level.ALL;

@@ -205,12 +205,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: Column(
                     children: [
                       _buildTextField(
-                        controller: _nameController,
-                        label: 'Child\'s Name',
-                        icon: Icons.person_outline,
+                        controller: _parentNameController,
+                        label: 'Parent\'s Name',
+                        icon: Icons.family_restroom,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter child\'s name';
+                            return 'Please enter parent\'s name';
                           }
                           if (value.length < 2) {
                             return 'Name must be at least 2 characters';
@@ -220,12 +220,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                       const SizedBox(height: 20),
                       _buildTextField(
-                        controller: _parentNameController,
-                        label: 'Parent\'s Name',
-                        icon: Icons.family_restroom,
+                        controller: _nameController,
+                        label: 'Child\'s Name',
+                        icon: Icons.person_outline,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter parent\'s name';
+                            return 'Please enter child\'s name';
                           }
                           if (value.length < 2) {
                             return 'Name must be at least 2 characters';
