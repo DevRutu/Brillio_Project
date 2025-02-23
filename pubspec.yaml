@@ -25,7 +25,7 @@ dependencies:
   flutter_map: ^6.1.0     # Added for map display
   latlong2: ^0.9.0        # Added for map coordinates
   intl: ^0.18.1
-  url_launcher: ^6.2.5
+  url_launcher: ^6.3.1
   flutter_native_splash: ^2.4.4
 
 dev_dependencies:

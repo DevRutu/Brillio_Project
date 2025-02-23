@@ -1,0 +1,2 @@
+D:/Projects/Brillio/Brillio_project/android/app/.cxx/Debug/4e2s2w3a/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/Projects/Brillio/Brillio_project/android/app/.cxx/Debug/4e2s2w3a/armeabi-v7a/CMakeFiles/rebuild_cache.dir
