@@ -11,6 +11,7 @@ import '../screens/kids_marketplace_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/scheduler_screen.dart';
+import '../screens/curio_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -26,8 +27,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final List<String> indianCities = [
-    'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai',
-    'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow'
+    'Mumbai',
+    'Delhi',
+    'Bangalore',
+    'Hyderabad',
+    'Chennai',
+    'Kolkata',
+    'Pune',
+    'Ahmedabad',
+    'Jaipur',
+    'Lucknow'
   ];
 
   @override
@@ -40,7 +49,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Future<void> _cleanupPastEvents() async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     final QuerySnapshot eventsToDelete = await _firestore
         .collection('events')
         .where('date_timestamp', isLessThan: today.millisecondsSinceEpoch)
@@ -216,7 +225,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
           onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => EventsNearbyScreen(selectedCity: _selectedCity ?? ''),
+              builder: (_) =>
+                  EventsNearbyScreen(selectedCity: _selectedCity ?? ''),
             ),
           ),
           child: Text(
@@ -233,90 +243,91 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   // In explore_screen.dart - Update _buildEventsSectionContent()
-Widget _buildEventsSectionContent() {
-  if (_selectedCity == null) {
-    return _buildNoEventsContent();
-  }
+  Widget _buildEventsSectionContent() {
+    if (_selectedCity == null) {
+      return _buildNoEventsContent();
+    }
 
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
-  return StreamBuilder<QuerySnapshot>(
-    stream: FirebaseFirestore.instance
-        .collection('events')
-        .where('city', isEqualTo: _selectedCity)
-        .where('date_timestamp', isGreaterThanOrEqualTo: today.millisecondsSinceEpoch)
-        .orderBy('date_timestamp')
-        .limit(3)
-        .snapshots(),
-    builder: (context, snapshot) {
-      if (snapshot.hasError) {
-        print('Error: ${snapshot.error}');
-        return Center(child: Text('Error loading events'));
-      }
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('events')
+          .where('city', isEqualTo: _selectedCity)
+          .where('date_timestamp',
+              isGreaterThanOrEqualTo: today.millisecondsSinceEpoch)
+          .orderBy('date_timestamp')
+          .limit(3)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print('Error: ${snapshot.error}');
+          return Center(child: Text('Error loading events'));
+        }
 
-      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-        return _buildNoEventsContent();
-      }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return _buildNoEventsContent();
+        }
 
-      final events = snapshot.data!.docs;
-      final user = FirebaseAuth.instance.currentUser;
-      bool hasCreatedEvents = false;
-      String? userEventId;
+        final events = snapshot.data!.docs;
+        final user = FirebaseAuth.instance.currentUser;
+        bool hasCreatedEvents = false;
+        String? userEventId;
 
-      // Check if user has created any events
-      if (user != null) {
-        for (var event in events) {
-          final data = event.data() as Map<String, dynamic>;
-          if (data['createdBy'] == user.uid) {
-            hasCreatedEvents = true;
-            userEventId = event.id;
-            break;
+        // Check if user has created any events
+        if (user != null) {
+          for (var event in events) {
+            final data = event.data() as Map<String, dynamic>;
+            if (data['createdBy'] == user.uid) {
+              hasCreatedEvents = true;
+              userEventId = event.id;
+              break;
+            }
           }
         }
-      }
 
-      return Column(
-        children: [
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              final data = event.data() as Map<String, dynamic>;
-              return _buildEventCard(event);
-            },
-          ),
-          const SizedBox(height: 20),
-          _buildHostEventButton(),
-          if (hasCreatedEvents) ...[
-            const SizedBox(height: 15),
-            GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => HostEventScreen(
-                    isEditing: true,
-                    eventId: userEventId,
+        return Column(
+          children: [
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = events[index];
+                final data = event.data() as Map<String, dynamic>;
+                return _buildEventCard(event);
+              },
+            ),
+            const SizedBox(height: 20),
+            _buildHostEventButton(),
+            if (hasCreatedEvents) ...[
+              const SizedBox(height: 15),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HostEventScreen(
+                      isEditing: true,
+                      eventId: userEventId,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  'Edit your event',
+                  style: GoogleFonts.quicksand(
+                    fontSize: 16,
+                    color: const Color(0xFF5D7BD5),
+                    decoration: TextDecoration.underline,
                   ),
                 ),
               ),
-              child: Text(
-                'Edit your event',
-                style: GoogleFonts.quicksand(
-                  fontSize: 16,
-                  color: const Color(0xFF5D7BD5),
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
+            ],
           ],
-        ],
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
   Widget _buildNoEventsContent() {
     return Column(
@@ -358,208 +369,210 @@ Widget _buildEventsSectionContent() {
     );
   }
 
-Widget _buildEventCard(DocumentSnapshot event) {
-  final data = event.data() as Map<String, dynamic>;
-  
-  // Safely access the timestamp with a default value
-  final timestamp = data['date_timestamp'] as int? ?? DateTime.now().millisecondsSinceEpoch;
-  final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-  
-  final formattedDate = DateFormat('dd').format(date);
-  final formattedMonth = DateFormat('MMM').format(date);
+  Widget _buildEventCard(DocumentSnapshot event) {
+    final data = event.data() as Map<String, dynamic>;
 
-  return Card(
-    margin: const EdgeInsets.only(bottom: 15),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(15),
-    ),
-    elevation: 2,
-    child: InkWell(
-      borderRadius: BorderRadius.circular(15),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => EventsNearbyScreen(selectedCity: _selectedCity ?? ''),
-        ),
+    // Safely access the timestamp with a default value
+    final timestamp =
+        data['date_timestamp'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+
+    final formattedDate = DateFormat('dd').format(date);
+    final formattedMonth = DateFormat('MMM').format(date);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Row(
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: const Color(0xFFA873E8).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    formattedDate,
-                    style: GoogleFonts.quicksand(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFA873E8),
-                    ),
-                  ),
-                  Text(
-                    formattedMonth,
-                    style: GoogleFonts.quicksand(
-                      fontSize: 14,
-                      color: const Color(0xFFA873E8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data['title']?.toString() ?? 'Untitled Event',
-                    style: GoogleFonts.quicksand(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF5D7BD5),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: Color(0xFFA873E8),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${data['location']?.toString() ?? 'Unknown'}, ${data['city']?.toString() ?? ''}',
-                        style: GoogleFonts.quicksand(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-  
-  Widget _buildKidsMarketplaceSection() {
-  return Padding(
-    padding: const EdgeInsets.all(20),
-    child: InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const KidsMarketplaceScreen()),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF5D7BD5), Color(0xFFA873E8)],
+      elevation: 2,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                EventsNearbyScreen(selectedCity: _selectedCity ?? ''),
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF5D7BD5).withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -20,
-              top: -20,
-              child: Icon(
-                Icons.shopping_bag_rounded,
-                size: 100,
-                color: Colors.white.withOpacity(0.1),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFA873E8).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      formattedDate,
+                      style: GoogleFonts.quicksand(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFA873E8),
+                      ),
+                    ),
+                    Text(
+                      formattedMonth,
+                      style: GoogleFonts.quicksand(
+                        fontSize: 14,
+                        color: const Color(0xFFA873E8),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.storefront_rounded,
-                        color: Colors.white,
-                        size: 28,
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data['title']?.toString() ?? 'Untitled Event',
+                      style: GoogleFonts.quicksand(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF5D7BD5),
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Kids Marketplace',
-                        style: GoogleFonts.quicksand(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Discover amazing products for your kids - toys, books, educational items, and more!',
-                    style: GoogleFonts.quicksand(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.9),
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    const SizedBox(height: 8),
+                    Row(
                       children: [
-                        Text(
-                          'Shop Now',
-                          style: GoogleFonts.quicksand(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF5D7BD5),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
                         const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Color(0xFF5D7BD5),
-                          size: 20,
+                          Icons.location_on,
+                          size: 16,
+                          color: Color(0xFFA873E8),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${data['location']?.toString() ?? 'Unknown'}, ${data['city']?.toString() ?? ''}',
+                          style: GoogleFonts.quicksand(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildKidsMarketplaceSection() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const KidsMarketplaceScreen()),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF5D7BD5), Color(0xFFA873E8)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF5D7BD5).withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Icon(
+                  Icons.shopping_bag_rounded,
+                  size: 100,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.storefront_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Kids Marketplace',
+                          style: GoogleFonts.quicksand(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Discover amazing products for your kids - toys, books, educational items, and more!',
+                      style: GoogleFonts.quicksand(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Shop Now',
+                            style: GoogleFonts.quicksand(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF5D7BD5),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Color(0xFF5D7BD5),
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildBottomNavBar() {
     return Container(
@@ -628,7 +641,10 @@ Widget _buildEventCard(DocumentSnapshot event) {
     return FloatingActionButton(
       backgroundColor: const Color(0xFFA873E8),
       onPressed: () {
-        // TODO: Implement chatbot navigation
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CurioScreen()),
+        );
       },
       child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
     );
