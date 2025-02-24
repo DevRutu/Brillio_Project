@@ -81,18 +81,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Discover',
-            style: GoogleFonts.quicksand(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFFA873E8),
-            ),
-          ),
-        ],
+      child: Text(
+        'Discover',
+        style: GoogleFonts.quicksand(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xFFA873E8),
+        ),
       ),
     );
   }
@@ -114,53 +109,90 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 15),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFA873E8),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF5D7BD5), Color(0xFFA873E8)],
+              ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFA873E8).withOpacity(0.3),
+                  color: const Color(0xFF5D7BD5).withOpacity(0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: Row(
+            child: Stack(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Positioned(
+                  right: -15,
+                  top: -15,
+                  child: Icon(
+                    Icons.explore,
+                    size: 80,
+                    color: Colors.white.withOpacity(0.1),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
                     children: [
-                      Text(
-                        'Nature Scavenger Hunt',
-                        style: GoogleFonts.quicksand(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Explore nature and find hidden treasures in your backyard',
-                        style: GoogleFonts.quicksand(
-                          fontSize: 15,
-                          color: Colors.white.withOpacity(0.9),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Nature Scavenger Hunt',
+                              style: GoogleFonts.quicksand(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Explore nature and find hidden treasures in your backyard',
+                              style: GoogleFonts.quicksand(
+                                fontSize: 15,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Start Activity',
+                                    style: GoogleFonts.quicksand(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF5D7BD5),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    color: Color(0xFF5D7BD5),
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white,
-                    size: 20,
                   ),
                 ),
               ],
@@ -176,24 +208,25 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'Creative Corner',
             style: GoogleFonts.quicksand(
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF5D7BD5),
             ),
           ),
         ),
+        const SizedBox(height: 10),
         SizedBox(
-          height: 200,
+          height: 210,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             itemCount: categoryCards.length,
             itemBuilder: (context, index) {
-              return _buildCategoryCard(categoryCards[index]);
+              return _buildCategoryCard(categoryCards[index], index);
             },
           ),
         ),
@@ -201,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryCard(Map<String, String> category) {
+  Widget _buildCategoryCard(Map<String, String> category, int index) {
     return Container(
       width: 160,
       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -215,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
               image: AssetImage(category['image']!),
               fit: BoxFit.cover,
               colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.4),
+                Colors.black.withOpacity(0.25), // Reduced darkness from 0.4 to 0.25
                 BlendMode.darken,
               ),
             ),
@@ -229,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   category['title']!,
                   style: GoogleFonts.quicksand(
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -248,7 +281,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-      ),
+      ).animate(delay: Duration(milliseconds: index * 100))
+        .fadeIn(duration: const Duration(milliseconds: 300))
+        .slideY(begin: 0.2, end: 0, duration: const Duration(milliseconds: 300)),
     );
   }
 
@@ -266,6 +301,29 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': 'Math Magic Games',
         'description': 'Fun ways to practice basic mathematics'
       },
+    ];
+
+    // Darker gradient colors to improve text contrast
+    final List<List<Color>> gradientColors = [
+      [
+        const Color(0xFFFF6B8B), // Darker pink/red
+        const Color(0xFFE05C7F), // Darker salmon
+      ],
+      [
+        const Color(0xFF4CD280), // Darker green
+        const Color(0xFF28A55F), // Darker teal
+      ],
+      [
+        const Color(0xFF7A93D8), // Darker blue
+        const Color(0xFFB772D9), // Darker purple
+      ],
+    ];
+
+    // More generic icons that would work for any activity type
+    final List<IconData> activityIcons = [
+      Icons.lightbulb_outline, // Generic "idea" icon
+      Icons.emoji_events_outlined, // Generic "achievement" icon
+      Icons.extension_outlined, // Generic "puzzle piece" icon for any activity
     ];
 
     return Column(
@@ -289,49 +347,98 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: activities.length,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemBuilder: (context, index) {
-            return Container(
+            return Card(
               margin: const EdgeInsets.only(bottom: 15),
-              decoration: BoxDecoration(
-                color: const Color(0xFFC2FFEE),
+              elevation: 4,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                title: Text(
-                  activities[index]['title']!,
-                  style: GoogleFonts.quicksand(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF5D7BD5),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: gradientColors[index],
                   ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    activities[index]['description']!,
-                    style: GoogleFonts.quicksand(
-                      fontSize: 14,
-                      color: Colors.black87,
+                child: Stack(
+                  children: [
+                    // Background pattern for added visual interest
+                    Positioned(
+                      right: -15,
+                      top: -15,
+                      child: Icon(
+                        Icons.stars, // Generic icon for all activities
+                        size: 70,
+                        color: Colors.white.withOpacity(0.1),
+                      ),
                     ),
-                  ),
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: const Color(0xFF5D7BD5),
-                    size: 20,
-                  ),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 15,
+                      ),
+                      title: Text(
+                        activities[index]['title']!,
+                        style: GoogleFonts.quicksand(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          // Add a slight text shadow for better contrast
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.3),
+                              offset: const Offset(0, 1),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          activities[index]['description']!,
+                          style: GoogleFonts.quicksand(
+                            fontSize: 14,
+                            color: Colors.white,
+                            // Add a slight text shadow for better contrast
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.2),
+                                offset: const Offset(0, 1),
+                                blurRadius: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward_ios,
+                          color: gradientColors[index][0],
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
+            ).animate(delay: Duration(milliseconds: index * 150))
+              .fadeIn(duration: const Duration(milliseconds: 300))
+              .slideX(begin: 0.2, end: 0, duration: const Duration(milliseconds: 300));
           },
         ),
       ],
@@ -349,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(255, 210, 210, 210).withOpacity(0.2),
+            color: Colors.grey.withOpacity(0.2),
             blurRadius: 15,
             offset: const Offset(0, -5),
           ),
@@ -383,8 +490,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (_) => const ExploreScreen(),
               ),
             ).then((_) {
-              setState(
-                  () => _selectedIndex = 0); // Reset to home when returning
+              setState(() => _selectedIndex = 0); // Reset to home when returning
             });
             break;
           case 2: // Schedule tab
@@ -394,8 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (_) => const SchedulerScreen(),
               ),
             ).then((_) {
-              setState(
-                  () => _selectedIndex = 0); // Reset to home when returning
+              setState(() => _selectedIndex = 0); // Reset to home when returning
             });
             break;
           case 3: // Profile tab
@@ -439,16 +544,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      )
-          .animate(
-            target: isSelected ? 1 : 0,
-          )
-          .scale(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            begin: const Offset(1, 1),
-            end: const Offset(1.05, 1.05),
-          ),
+      ).animate(target: isSelected ? 1 : 0)
+        .scale(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          begin: const Offset(1, 1),
+          end: const Offset(1.05, 1.05),
+        ),
     );
   }
 }

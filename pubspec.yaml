@@ -27,6 +27,9 @@ dependencies:
   intl: ^0.18.1
   url_launcher: ^6.3.1
   flutter_native_splash: ^2.4.4
+  google_generative_ai: ^0.4.6
+  uuid: ^4.5.1
+  flutter_markdown: ^0.7.6+2
 
 dev_dependencies:
   flutter_test:
