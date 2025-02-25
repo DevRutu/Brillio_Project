@@ -73,7 +73,7 @@ class _CurioScreenState extends State<CurioScreen> {
     }
     
     _model = GenerativeModel(
-      model: 'gemini-pro',
+      model: 'gemini-1.5-pro',
       apiKey: apiKey,
       safetySettings: [
         SafetySetting(
