@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class CurioScreen extends StatefulWidget {
   const CurioScreen({super.key});
@@ -23,13 +24,29 @@ class _CurioScreenState extends State<CurioScreen> {
   late GenerativeModel _model;
   bool _isLoading = false;
   bool _showScrollToBottom = false;
+  bool _isConnected = true;
   
   @override
   void initState() {
     super.initState();
     _initGemini();
+    _checkConnectivity();
     _removeOldMessages();
     _scrollController.addListener(_scrollListener);
+  }
+
+  Future<void> _checkConnectivity() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    setState(() {
+      _isConnected = connectivityResult != ConnectivityResult.none;
+    });
+    
+    // Listen for connectivity changes
+    Connectivity().onConnectivityChanged.listen((result) {
+      setState(() {
+        _isConnected = result != ConnectivityResult.none;
+      });
+    });
   }
 
   void _scrollListener() {
@@ -49,6 +66,9 @@ class _CurioScreenState extends State<CurioScreen> {
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     if (apiKey == null) {
       print('Error: GEMINI_API_KEY not found in .env file');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing API key configuration')),
+      );
       return;
     }
     
@@ -80,22 +100,34 @@ class _CurioScreenState extends State<CurioScreen> {
     final user = _auth.currentUser;
     if (user == null) return;
     
-    final twentyFourHoursAgo = DateTime.now().subtract(Duration(hours: 24));
-    
-    final QuerySnapshot oldMessages = await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .collection('chat_messages')
-        .where('timestamp', isLessThan: twentyFourHoursAgo.millisecondsSinceEpoch)
-        .get();
-        
-    for (var doc in oldMessages.docs) {
-      await doc.reference.delete();
+    try {
+      final twentyFourHoursAgo = DateTime.now().subtract(Duration(hours: 24));
+      
+      final QuerySnapshot oldMessages = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('chat_messages')
+          .where('timestamp', isLessThan: twentyFourHoursAgo.millisecondsSinceEpoch)
+          .get();
+          
+      for (var doc in oldMessages.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      print('Error removing old messages: $e');
+      // Don't show error to user as this is a background operation
     }
   }
 
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
+    
+    if (!_isConnected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No internet connection. Please check your connection and try again.')),
+      );
+      return;
+    }
     
     final user = _auth.currentUser;
     if (user == null) {
@@ -116,23 +148,23 @@ class _CurioScreenState extends State<CurioScreen> {
     final messageId = const Uuid().v4();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     
-    // Save user message to Firestore
-    await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .collection('chat_messages')
-        .doc(messageId)
-        .set({
-          'text': text,
-          'isUser': true,
-          'timestamp': timestamp,
-          'dateFormatted': DateFormat('MMM d, h:mm a').format(DateTime.now()),
-        });
-    
-    // Scroll to the bottom
-    _scrollToBottom();
-    
     try {
+      // Save user message to Firestore
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('chat_messages')
+          .doc(messageId)
+          .set({
+            'text': text,
+            'isUser': true,
+            'timestamp': timestamp,
+            'dateFormatted': DateFormat('MMM d, h:mm a').format(DateTime.now()),
+          });
+      
+      // Scroll to the bottom
+      _scrollToBottom();
+      
       // Use Gemini API for generating a response
       final systemPrompt = '''You are Curio, a helpful and friendly assistant for parents of young children.
 You ONLY provide advice on:
@@ -189,20 +221,39 @@ Be warm, supportive, and non-judgmental in your tone.''';
             });
       }
     } catch (e) {
-      print('Error generating response: $e');
-      // Save error message to Firestore
-      final botMessageId = const Uuid().v4();
-      await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('chat_messages')
-          .doc(botMessageId)
-          .set({
-            'text': "I'm sorry, I'm having trouble connecting right now. Please try again later.",
-            'isUser': false,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-            'dateFormatted': DateFormat('MMM d, h:mm a').format(DateTime.now()),
-          });
+      print('Error sending/receiving message: $e');
+      
+      String errorMessage = "I'm having trouble connecting right now. Please try again later.";
+      
+      // More specific error messages based on error type
+      if (e is FirebaseException) {
+        if (e.code == 'permission-denied') {
+          errorMessage = "Access denied. There might be an issue with your account permissions.";
+        } else if (e.code == 'unavailable') {
+          errorMessage = "Firebase service is currently unavailable. Please try again later.";
+        }
+      }
+      
+      // Save error message to Firestore if possible
+      try {
+        final botMessageId = const Uuid().v4();
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('chat_messages')
+            .doc(botMessageId)
+            .set({
+              'text': errorMessage,
+              'isUser': false,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+              'dateFormatted': DateFormat('MMM d, h:mm a').format(DateTime.now()),
+            });
+      } catch (storeError) {
+        // If we can't store the error in Firestore, just show it in the UI
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -242,6 +293,13 @@ Be warm, supportive, and non-judgmental in your tone.''';
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          if (!_isConnected)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Icon(Icons.cloud_off, color: Colors.white),
+            ),
+        ],
       ),
       body: user == null
           ? _buildLoginRequired()
@@ -309,6 +367,31 @@ Be warm, supportive, and non-judgmental in your tone.''';
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              // Navigate to login screen or trigger login process
+              // This depends on how you've implemented authentication in your app
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please return to the main screen and log in')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFA873E8),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            child: Text(
+              'Go to Login',
+              style: GoogleFonts.quicksand(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -324,7 +407,51 @@ Be warm, supportive, and non-judgmental in your tone.''';
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error loading messages',
+                  style: GoogleFonts.quicksand(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Text(
+                    'There was a problem connecting to the database. This may be due to security rules or network issues.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.quicksand(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      // Refresh the page
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFA873E8),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Try Again'),
+                ),
+              ],
+            ),
+          );
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -352,57 +479,59 @@ Be warm, supportive, and non-judgmental in your tone.''';
 
   Widget _buildWelcomeMessage() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: const Color(0xFFA873E8).withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.lightbulb_outline,
-              size: 48,
-              color: Color(0xFFA873E8),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Welcome to Curio!',
-            style: GoogleFonts.quicksand(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFFA873E8),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              'Ask me anything about kids activities, reducing screen time, or parenting tips.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.quicksand(
-                fontSize: 16,
-                color: Colors.grey[600],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: const Color(0xFFA873E8).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.lightbulb_outline,
+                size: 48,
+                color: Color(0xFFA873E8),
               ),
             ),
-          ),
-          const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSuggestionChip('Fun activities for a rainy day?'),
-                _buildSuggestionChip('How to reduce my 5-year-old\'s screen time?'),
-                _buildSuggestionChip('My 3-year-old won\'t eat vegetables'),
-                _buildSuggestionChip('Educational games for a 7-year-old'),
-              ],
+            const SizedBox(height: 20),
+            Text(
+              'Welcome to Curio!',
+              style: GoogleFonts.quicksand(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFA873E8),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                'Ask me anything about kids activities, reducing screen time, or parenting tips.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.quicksand(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSuggestionChip('Fun activities for a rainy day?'),
+                  _buildSuggestionChip('How to reduce my 5-year-old\'s screen time?'),
+                  _buildSuggestionChip('My 3-year-old won\'t eat vegetables'),
+                  _buildSuggestionChip('Educational games for a 7-year-old'),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -448,136 +577,143 @@ Be warm, supportive, and non-judgmental in your tone.''';
   }
 
   Widget _buildMessageBubble({
-  required String text,
-  required bool isUser,
-  required String timestamp,
-}) {
-  return Align(
-    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.75,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isUser
-            ? const Color(0xFFA873E8)
-            : const Color(0xFF5D7BD5).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20).copyWith(
-          bottomRight: isUser ? const Radius.circular(0) : null,
-          bottomLeft: !isUser ? const Radius.circular(0) : null,
+    required String text,
+    required bool isUser,
+    required String timestamp,
+  }) {
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isUser
+              ? const Color(0xFFA873E8)
+              : const Color(0xFF5D7BD5).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20).copyWith(
+            bottomRight: isUser ? const Radius.circular(0) : null,
+            bottomLeft: !isUser ? const Radius.circular(0) : null,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            isUser 
+              ? Text(
+                  text,
+                  style: GoogleFonts.quicksand(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                )
+              : MarkdownBody(
+                  data: text,
+                  styleSheet: MarkdownStyleSheet(
+                    p: GoogleFonts.quicksand(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    strong: GoogleFonts.quicksand(
+                      fontSize: 16, 
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+            const SizedBox(height: 6),
+            Text(
+              timestamp,
+              style: GoogleFonts.quicksand(
+                fontSize: 12,
+                color: isUser
+                    ? Colors.white.withOpacity(0.7)
+                    : Colors.black54,
+              ),
+            ),
+          ],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          isUser 
-            ? Text(
-                text,
-                style: GoogleFonts.quicksand(
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              )
-            : MarkdownBody(
-                data: text,
-                styleSheet: MarkdownStyleSheet(
-                  p: GoogleFonts.quicksand(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-                  strong: GoogleFonts.quicksand(
-                    fontSize: 16, 
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-          const SizedBox(height: 6),
-          Text(
-            timestamp,
-            style: GoogleFonts.quicksand(
-              fontSize: 12,
-              color: isUser
-                  ? Colors.white.withOpacity(0.7)
-                  : Colors.black54,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildInputBar() {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.2),
-          blurRadius: 10,
-          offset: const Offset(0, -5),
-        ),
-      ],
-    ),
-    child: SafeArea(
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Ask Curio something...',
-                hintStyle: GoogleFonts.quicksand(color: Colors.black),  // Set hint text color to black
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.grey[100],
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-              ),
-              style: GoogleFonts.quicksand(color: Colors.black),  // Set input text color to black
-              minLines: 1,
-              maxLines: 5,
-              textCapitalization: TextCapitalization.sentences,
-              onSubmitted: _isLoading ? null : (text) => _sendMessage(text),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFA873E8),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              onPressed: _isLoading
-                  ? null
-                  : () => _sendMessage(_messageController.text),
-              icon: _isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Icon(Icons.send_rounded, color: Colors.white),
-            ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
-    ),
-  );
-}
-
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _messageController,
+                enabled: _isConnected,
+                decoration: InputDecoration(
+                  hintText: _isConnected 
+                      ? 'Ask Curio something...' 
+                      : 'No internet connection...',
+                  hintStyle: GoogleFonts.quicksand(color: Colors.black),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: _isConnected ? Colors.grey[100] : Colors.grey[200],
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
+                style: GoogleFonts.quicksand(color: Colors.black),
+                minLines: 1,
+                maxLines: 5,
+                textCapitalization: TextCapitalization.sentences,
+                onSubmitted: (_isLoading || !_isConnected) ? null : (text) => _sendMessage(text),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: (_isLoading || !_isConnected) 
+                    ? Colors.grey 
+                    : const Color(0xFFA873E8),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                onPressed: (_isLoading || !_isConnected)
+                    ? null
+                    : () => _sendMessage(_messageController.text),
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Icon(
+                        _isConnected ? Icons.send_rounded : Icons.cloud_off,
+                        color: Colors.white
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
