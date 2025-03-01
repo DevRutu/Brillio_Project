@@ -120,7 +120,7 @@ class _KidsMarketplaceScreenState extends State<KidsMarketplaceScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '\₹${product.price.toStringAsFixed(2)}',
+                    '₹${product.price.toStringAsFixed(2)}',
                     style: GoogleFonts.quicksand(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

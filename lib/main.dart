@@ -4,9 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:provider/provider.dart'; // Added for Provider
 
 import 'firebase_options.dart';
 import 'screens/loading_screen.dart';
+import 'screens/schedule_provider.dart'; // Added for ScheduleProvider
 
 void main() async {
   Logger.root.level = Level.ALL;
@@ -42,7 +44,14 @@ void main() async {
     await Firebase.initializeApp(options: firebaseOptions);
     log.info("Firebase initialization successful");
 
-    runApp(const BrillioApp());
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ScheduleProvider()), // Added ScheduleProvider
+        ],
+        child: const BrillioApp(),
+      ),
+    );
   } catch (e, stackTrace) {
     print('Initialization error: $e');
     print('Stack trace: $stackTrace');
@@ -82,7 +91,14 @@ class BrillioApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: const Color(0xFFA873E8),
         scaffoldBackgroundColor: Colors.white,
-        textTheme: GoogleFonts.quicksandTextTheme().copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFA873E8),
+          primary: const Color(0xFFA873E8),
+          secondary: const Color(0xFF5D7BD5),
+        ),
+        textTheme: GoogleFonts.quicksandTextTheme(
+          Theme.of(context).textTheme,
+        ).copyWith(
           displayLarge: TextStyle(
             color: const Color(0xFFA873E8),
             fontSize: 32,

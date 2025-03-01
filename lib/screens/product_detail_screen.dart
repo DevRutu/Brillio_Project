@@ -125,7 +125,7 @@ class ProductDetailsScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                '\₹${product.price.toStringAsFixed(2)}',
+                '₹${product.price.toStringAsFixed(2)}',
                 style: GoogleFonts.quicksand(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -212,7 +212,7 @@ class ProductDetailsScreen extends StatelessWidget {
               ),
             ],
           ),
-        )).toList(),
+        )),
       ],
     );
   }
