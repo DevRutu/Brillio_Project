@@ -146,54 +146,61 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _buildCitySelector() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Select City',
-            style: GoogleFonts.quicksand(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF5D7BD5),
-            ),
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 20),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Select City',
+          style: GoogleFonts.quicksand(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF5D7BD5),
           ),
-          const SizedBox(height: 10),
-          DropdownSearch<String>(
-            popupProps: const PopupProps.menu(
-              showSelectedItems: true,
-              showSearchBox: true,
-            ),
-            items: indianCities,
-            dropdownDecoratorProps: DropDownDecoratorProps(
-              dropdownSearchDecoration: InputDecoration(
+        ),
+        const SizedBox(height: 10),
+        DropdownSearch<String>(
+          items: indianCities, // Static list of cities
+          selectedItem: _selectedCity,
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() => _selectedCity = newValue);
+              _saveSelectedCity(newValue);
+            }
+          },
+          popupProps: PopupProps.menu(
+            showSearchBox: true, // Enable search functionality
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: "Search city",
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
+                  horizontal: 16,
+                  vertical: 8,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Color(0xFF5D7BD5)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Color(0xFF5D7BD5)),
                 ),
               ),
             ),
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                setState(() => _selectedCity = newValue);
-                _saveSelectedCity(newValue);
-              }
-            },
-            selectedItem: _selectedCity,
+            menuProps: MenuProps(
+              borderRadius: BorderRadius.circular(15),
+            ),
           ),
-        ],
-      ),
-    );
-  }
+          dropdownBuilder: (context, selectedItem) {
+            return Text(
+              selectedItem ?? 'Select a city',
+              style: GoogleFonts.quicksand(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            );
+          },
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildEventsSection() {
     return Padding(
@@ -242,7 +249,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  // In explore_screen.dart - Update _buildEventsSectionContent()
   Widget _buildEventsSectionContent() {
     if (_selectedCity == null) {
       return _buildNoEventsContent();
