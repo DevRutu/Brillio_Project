@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +28,7 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
   int _selectedIndex = 2; // Since Scheduler is the third tab
   bool _isFirstTime = true;
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  Timer? _autoCheckTimer;
 
   @override
   void initState() {
@@ -37,7 +40,112 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
       scheduleProvider.loadSchedule();
+      _startAutoCompletionTimer();
     });
+  }
+
+  @override
+  void dispose() {
+    _autoCheckTimer?.cancel();
+    super.dispose();
+  }
+
+  // Start timer to periodically check and auto-complete tasks
+  void _startAutoCompletionTimer() {
+    // Check every minute for task completion
+    _autoCheckTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _autoCompleteTasks();
+    });
+    
+    // Also run once immediately
+    _autoCompleteTasks();
+  }
+
+  // Function to auto-complete tasks based on time
+  void _autoCompleteTasks() {
+    final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
+    final allTasks = [
+      ...scheduleProvider.morningTasks,
+      ...scheduleProvider.afternoonTasks,
+      ...scheduleProvider.eveningTasks,
+    ];
+
+    // Sort all tasks by time
+    allTasks.sort((a, b) => _compareTaskTimes(a['time'], b['time']));
+    
+    // Get current time
+    final now = DateTime.now();
+    final currentTimeString = DateFormat('h:mm a').format(now).toLowerCase();
+    
+    // Find the current task based on time
+    int currentTaskIndex = -1;
+    for (int i = 0; i < allTasks.length; i++) {
+      if (_isTimeBeforeOrEqual(currentTimeString, allTasks[i]['time'])) {
+        currentTaskIndex = i;
+        break;
+      }
+    }
+    
+    // If no current task found (all tasks are in the past), mark all as completed
+    if (currentTaskIndex == -1 && allTasks.isNotEmpty) {
+      for (var task in allTasks) {
+        _markTaskAsCompleted(scheduleProvider, task);
+      }
+    } else {
+      // Mark all tasks before the current one as completed
+      for (int i = 0; i < currentTaskIndex; i++) {
+        _markTaskAsCompleted(scheduleProvider, allTasks[i]);
+      }
+    }
+  }
+
+  // Helper function to mark a task as completed
+  void _markTaskAsCompleted(ScheduleProvider provider, Map<String, dynamic> task) {
+    if (task['completed'] != true) {
+      // Determine which section the task belongs to
+      if (provider.morningTasks.contains(task)) {
+        provider.toggleTaskCompletion('morning', task);
+      } else if (provider.afternoonTasks.contains(task)) {
+        provider.toggleTaskCompletion('afternoon', task);
+      } else if (provider.eveningTasks.contains(task)) {
+        provider.toggleTaskCompletion('evening', task);
+      }
+    }
+  }
+
+  // Helper function to compare two time strings (format: "7:00 am")
+  int _compareTaskTimes(String timeA, String timeB) {
+    return _parseTimeToMinutes(timeA) - _parseTimeToMinutes(timeB);
+  }
+
+  // Helper function to check if time1 is before or equal to time2
+  bool _isTimeBeforeOrEqual(String time1, String time2) {
+    return _parseTimeToMinutes(time1) <= _parseTimeToMinutes(time2);
+  }
+
+  // Helper function to parse time string to minutes since midnight
+  int _parseTimeToMinutes(String timeString) {
+    // Normalize the time format
+    timeString = timeString.toLowerCase().trim();
+    
+    // Split the time into components
+    List<String> parts = timeString.split(':');
+    int hour = int.parse(parts[0]);
+    
+    // Handle minute part which may include am/pm
+    String minutePart = parts[1];
+    List<String> minuteAndAmPm = minutePart.split(' ');
+    int minute = int.parse(minuteAndAmPm[0]);
+    String amPm = minuteAndAmPm[1];
+    
+    // Convert to 24-hour format
+    if (amPm == 'pm' && hour < 12) {
+      hour += 12;
+    } else if (amPm == 'am' && hour == 12) {
+      hour = 0;
+    }
+    
+    return hour * 60 + minute;
   }
 
   Future<void> _initializeNotifications() async {
@@ -161,6 +269,8 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
           onScheduleCreated: () {
             _setHasSchedule();
             _scheduleNotifications();
+            // Restart auto-completion timer when schedule is updated
+            _startAutoCompletionTimer();
           },
         ),
       ),
@@ -306,8 +416,8 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
   Widget _buildScheduleHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Your Child\'s Day',
@@ -317,10 +427,11 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
               color: const Color(0xFF5D7BD5),
             ),
           ),
+          const SizedBox(height: 8),
           Consumer<ScheduleProvider>(
             builder: (context, scheduleProvider, child) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFFA873E8).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -328,7 +439,7 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                 child: Text(
                   scheduleProvider.scheduleTimeRange,
                   style: GoogleFonts.quicksand(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF5D7BD5),
                   ),
@@ -383,15 +494,13 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
             ),
             child: IconButton(
               onPressed: () {
-                final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
-                scheduleProvider.toggleTaskCompletionMode();
+                // Trigger manual auto-completion check
+                _autoCompleteTasks();
                 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      scheduleProvider.isTaskCompletionMode 
-                          ? 'Tap on tasks to mark them as completed' 
-                          : 'Task completion mode turned off',
+                      'Auto-updated task completion status',
                       style: GoogleFonts.quicksand(),
                     ),
                     backgroundColor: const Color(0xFF5D7BD5),
@@ -399,18 +508,12 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                   ),
                 );
               },
-              icon: Consumer<ScheduleProvider>(
-                builder: (context, scheduleProvider, child) {
-                  return Icon(
-                    scheduleProvider.isTaskCompletionMode 
-                        ? Icons.check_circle 
-                        : Icons.check_circle_outline,
-                    color: Colors.white,
-                    size: 28,
-                  );
-                }
+              icon: const Icon(
+                Icons.refresh,
+                color: Colors.white,
+                size: 28,
               ),
-              tooltip: 'Toggle task completion mode',
+              tooltip: 'Update task status',
             ),
           ),
         ],
@@ -510,7 +613,6 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
   }
 
   Widget _buildTaskItem(Map<String, dynamic> task, String section) {
-    final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
     final bool isCompleted = task['completed'] ?? false;
     
     return Container(
@@ -528,60 +630,51 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
           ),
         ],
       ),
-      child: InkWell(
-        onTap: scheduleProvider.isTaskCompletionMode
-            ? () {
-                scheduleProvider.toggleTaskCompletion(section.toLowerCase(), task);
-                _scheduleNotifications();
-              }
-            : null,
-        borderRadius: BorderRadius.circular(15),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isCompleted
-                    ? Colors.green.withOpacity(0.1)
-                    : const Color(0xFFE8E8FD),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isCompleted 
-                    ? Icons.check_circle
-                    : Icons.access_time,
-                color: isCompleted 
-                    ? Colors.green
-                    : const Color(0xFF5D7BD5),
-                size: 24,
-              ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isCompleted
+                  ? Colors.green.withOpacity(0.1)
+                  : const Color(0xFFE8E8FD),
+              borderRadius: BorderRadius.circular(12),
             ),
-            title: Text(
-              task['task'],
+            child: Icon(
+              isCompleted 
+                  ? Icons.check_circle
+                  : Icons.access_time,
+              color: isCompleted 
+                  ? Colors.green
+                  : const Color(0xFF5D7BD5),
+              size: 24,
+            ),
+          ),
+          title: Text(
+            task['task'],
+            style: GoogleFonts.quicksand(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF5D7BD5),
+              decoration: isCompleted ? TextDecoration.lineThrough : null,
+            ),
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isCompleted
+                  ? Colors.green.withOpacity(0.1)
+                  : const Color(0xFFA873E8).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              task['time'],
               style: GoogleFonts.quicksand(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF5D7BD5),
-                decoration: isCompleted ? TextDecoration.lineThrough : null,
-              ),
-            ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isCompleted
-                    ? Colors.green.withOpacity(0.1)
-                    : const Color(0xFFA873E8).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                task['time'],
-                style: GoogleFonts.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isCompleted ? Colors.green : const Color(0xFFA873E8),
-                ),
+                color: isCompleted ? Colors.green : const Color(0xFFA873E8),
               ),
             ),
           ),
@@ -589,7 +682,7 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
       ),
     ).animate(
       effects: [
-        if (!isCompleted && scheduleProvider.isTaskCompletionMode)
+        if (!isCompleted)
           ShimmerEffect(
             duration: const Duration(seconds: 2),
             delay: const Duration(seconds: 1),
