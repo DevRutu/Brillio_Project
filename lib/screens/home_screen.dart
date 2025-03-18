@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../screens/profile_screen.dart';
 import '../screens/explore_screen.dart';
 import '../screens/scheduler_screen.dart';
+import '../screens/subcategory_screen.dart'; // New import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -235,55 +236,68 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategoryCard(Map<String, String> category, int index) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            image: DecorationImage(
-              image: AssetImage(category['image']!),
-              fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.25), // Reduced darkness from 0.4 to 0.25
-                BlendMode.darken,
+    return GestureDetector(
+      onTap: () {
+        // Navigate to the SubcategoryScreen when a category card is tapped
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SubcategoryScreen(
+              categoryName: category['title']!,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.symmetric(horizontal: 10),
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              image: DecorationImage(
+                image: AssetImage(category['image']!),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.25), // Reduced darkness from 0.4 to 0.25
+                  BlendMode.darken,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    category['title']!,
+                    style: GoogleFonts.quicksand(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    category['description']!,
+                    style: GoogleFonts.quicksand(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
               ),
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(15),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  category['title']!,
-                  style: GoogleFonts.quicksand(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  category['description']!,
-                  style: GoogleFonts.quicksand(
-                    fontSize: 14,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ).animate(delay: Duration(milliseconds: index * 100))
-        .fadeIn(duration: const Duration(milliseconds: 300))
-        .slideY(begin: 0.2, end: 0, duration: const Duration(milliseconds: 300)),
+        ).animate(delay: Duration(milliseconds: index * 100))
+          .fadeIn(duration: const Duration(milliseconds: 300))
+          .slideY(begin: 0.2, end: 0, duration: const Duration(milliseconds: 300)),
+      ),
     );
   }
 
