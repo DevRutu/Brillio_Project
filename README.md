@@ -56,12 +56,4 @@ Track your progress and earn reward points for completing activities with your c
 
 Brillio aims to provide parents with the resources and tools they need to create a healthy and stimulating environment for their children. We believe in the power of play and the importance of reducing screen time to foster healthy development.
 
-## 🎥 Demo Video
-
-<video src="BrillioDemo.mp4" controls width="640" height="360">
-    Your browser does not support the video tag.
-</video>
-
----
-
 Thank you for checking out Brillio! We welcome your feedback and suggestions as we continue to improve and expand our features. Let's build a brighter future for our children, one activity at a time! 🌈
